@@ -1,9 +1,9 @@
 #include "9cc.h"
 
 // input string
-static char *user_input;
+static char *current_input;
 
-static Token *new_token(TokenKind kind, Token *cur, char *str, int len);
+static Token *new_token(TokenKind kind, Token *cur, char *loc, int len);
 static bool startswith(char *p, char *q);
 
 // エラーを報告するための関数
@@ -16,23 +16,34 @@ void error(char *fmt, ...) {
     exit(1);
 }
 
+// Reports an error location and exit.
+void verror_at(char *loc, char *fmt, va_list ap) {
+    int pos = loc - current_input;
+    fprintf(stderr, "%s\n", current_input);
+    fprintf(stderr, "%*s", pos, ""); // print pos spaces.
+    fprintf(stderr, "^ ");
+    vfprintf(stderr, fmt, ap);
+    fprintf(stderr, "\n");
+    exit(1);
+}
+
 // Teports an error location and exit.
 void error_at(char *loc, char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
+    verror_at(loc, fmt, ap);
+}
 
-    int pos = loc - user_input;
-    fprintf(stderr, "%s\n", user_input);
-    fprintf(stderr, "%*s", pos, ""); // print pos spaces.
-    fprintf(stderr, fmt, ap);
-    fprintf(stderr, "\n");
-    exit(1);
+void error_tok(Token *tok, char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    verror_at(tok->loc, fmt, ap);
 }
 
 
 // Consumes the current token if it matches `op`
 bool equal(Token *tok, char *op) {
-    return memcmp(tok->str, op, tok->len) == 0 && op[tok->len] == '\0';
+    return memcmp(tok->loc, op, tok->len) == 0 && op[tok->len] == '\0';
 }
 
 // Ensure that the current token is `op`
@@ -47,7 +58,7 @@ Token *skip(Token *tok, char *op) {
 // それ以外の場合にはエラーを報告する。
 int expect_number(Token *token) {
     if (token->kind != TK_NUM)
-      error_at(token->str, "expected a number");
+      error_at(token->loc, "expected a number");
     int val = token->val;
     token = token->next;
     return val;
@@ -58,10 +69,10 @@ bool at_eof(Token *token) {
 }
 
 // 新しいトークンを作成してcurに繋げる
-static Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
+static Token *new_token(TokenKind kind, Token *cur, char *loc, int len) {
     Token *tok = calloc(1, sizeof(Token));
     tok->kind = kind;
-    tok->str = str;
+    tok->loc = loc;
     tok->len = len;
     cur->next = tok;
     return tok;
@@ -72,8 +83,8 @@ static bool startswith(char *p, char *q) {
 }
 
 // 入力文字列pをトークナイズしてそれを返す
-Token *tokenize(char *user_input) {
-    char *p = user_input;
+Token *tokenize(char *current_input) {
+    char *p = current_input;
     Token head;
     head.next = NULL;
     Token *cur = &head;
