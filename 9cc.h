@@ -31,8 +31,6 @@ void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);
 bool equal(Token *tok, char *op);
 Token *skip(Token *tok, char *op);
-int expect_number(Token *token);
-bool at_eof(Token *token);
 Token *tokenize(char *user_input);
 
 

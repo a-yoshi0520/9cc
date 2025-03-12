@@ -49,23 +49,9 @@ bool equal(Token *tok, char *op) {
 // Ensure that the current token is `op`
 Token *skip(Token *tok, char *op) {
     if (!equal(tok, op)) {
-        //TODO:error_tok()
+        error_tok(tok, "expected '%s'", op);
     }
     return tok->next;
-}
-
-// 次のトークンが数値の場合、トークンを１つ読み進めてその数値を返す。
-// それ以外の場合にはエラーを報告する。
-int expect_number(Token *token) {
-    if (token->kind != TK_NUM)
-      error_at(token->loc, "expected a number");
-    int val = token->val;
-    token = token->next;
-    return val;
-}
-
-bool at_eof(Token *token) {
-    return token->kind == TK_EOF;
 }
 
 // 新しいトークンを作成してcurに繋げる
