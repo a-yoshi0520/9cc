@@ -17,7 +17,7 @@ void error(char *fmt, ...) {
 }
 
 // Reports an error location and exit.
-void verror_at(char *loc, char *fmt, va_list ap) {
+static void verror_at(char *loc, char *fmt, va_list ap) {
     int pos = loc - current_input;
     fprintf(stderr, "%s\n", current_input);
     fprintf(stderr, "%*s", pos, ""); // print pos spaces.

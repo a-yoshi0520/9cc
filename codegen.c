@@ -3,9 +3,16 @@
 static void gen(Node *node);
 
 static void gen(Node *node) {
-    if (node->kind == ND_NUM) {
-        printf("    push %d\n", node->val);
-        return;
+    switch (node->kind) {
+    case ND_NUM:
+      printf("    push %d\n", node->val);
+      return;
+    case ND_NEG:
+      gen(node->lhs);
+      printf("    pop rax\n");
+      printf("    neg rax\n");
+      printf("    push rax\n");
+      return;
     }
 
     gen(node->lhs);

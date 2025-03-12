@@ -26,6 +26,12 @@ static Node *new_binary(NodeKind kind, Node *lhs, Node *rhs) {
     return node;
 }
 
+static Node *new_unary(NodeKind kind, Node *expr) {
+    Node *node = new_node(kind);
+    node->lhs = expr;
+    return node;
+}
+
 static Node *new_num(int val) {
     Node *node = new_node(ND_NUM);
     node->val = val;
@@ -134,8 +140,7 @@ static Node *unary(Token **rest, Token *tok) {
         return unary(rest, tok->next);
     }
     if (equal(tok, "-")) {
-        return new_binary(ND_SUB, new_num(0), unary(rest, tok->next));
-        // TODO:make new_unary
+        return new_unary(ND_NEG, unary(rest, tok->next));
     }
     return primary(rest, tok);
 }
@@ -157,5 +162,9 @@ static Node *primary(Token **rest, Token *tok) {
 }
 
 Node *parse(Token *tok) {
-    return expr(&tok, tok);
+    Node *node = expr(&tok, tok);
+    if (tok->kind != TK_EOF) {
+        error_tok(tok, "extra token");
+    }
+    return node;
 }
