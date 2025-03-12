@@ -1,22 +1,23 @@
 #include "9cc.h"
 
-static void gen(Node *node);
+static void gen_expr(Node *node);
+static void gen_stmt(Node *node);
 
-static void gen(Node *node) {
+static void gen_expr(Node *node) {
     switch (node->kind) {
     case ND_NUM:
       printf("    push %d\n", node->val);
       return;
     case ND_NEG:
-      gen(node->lhs);
+      gen_expr(node->lhs);
       printf("    pop rax\n");
       printf("    neg rax\n");
       printf("    push rax\n");
       return;
     }
 
-    gen(node->lhs);
-    gen(node->rhs);
+    gen_expr(node->lhs);
+    gen_expr(node->rhs);
 
     printf("    pop rdi\n");
     printf("    pop rax\n");
@@ -57,7 +58,16 @@ static void gen(Node *node) {
       break;
     }
 
-    printf("  push rax\n");
+    printf("    push rax\n");
+}
+
+static void gen_stmt(Node *node) {
+    if (node->kind == ND_EXPR_STMT) {
+      gen_expr(node->lhs);
+      return;
+    }
+
+    error("Invalid statement");
 }
 
 void codegen(Node *node) {
@@ -67,7 +77,9 @@ void codegen(Node *node) {
     printf("main:\n");
 
     // Traverse the AST to emit assembly
-    gen(node);
+    for (Node *n = node; n; n = n->next) {
+        gen_stmt(n);
+    }
 
     // A result must be at the top of the stack, so pop it
     // to RAX to make it a program exit code.
