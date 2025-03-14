@@ -64,6 +64,7 @@ static void gen_expr(Node *node) {
 static void gen_stmt(Node *node) {
     if (node->kind == ND_EXPR_STMT) {
       gen_expr(node->lhs);
+      printf("    pop rax\n"); // A result must be at the top of the stack, so pop it
       return;
     }
 
@@ -81,8 +82,6 @@ void codegen(Node *node) {
         gen_stmt(n);
     }
 
-    // A result must be at the top of the stack, so pop it
     // to RAX to make it a program exit code.
-    printf("    pop rax\n");
     printf("    ret\n");
 }
